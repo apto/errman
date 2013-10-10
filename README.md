@@ -1,0 +1,4 @@
+errman
+======
+
+Error types/helpers
