@@ -6,7 +6,7 @@ var errman = require('../');
 
 describe('errman', function () {
   it('should register an error type', function () {
-    errman.type('BadMojoError', {});
+    errman.registerType('BadMojoError', {});
     expect(errman.BadMojoError).to.exist;
   });
 });
