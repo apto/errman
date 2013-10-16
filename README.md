@@ -103,3 +103,114 @@ throw new myErrMan.BadMojoError;
 // Neither will this:
 throw new errMan.FileNotFoundError({filePath: '/some/file/path.txt'});
 ```
+
+### Serialize error to JSON
+
+```js
+var errman = require('errman');
+
+errman.registerType('FileNotFoundError', {
+  message: 'Could not find file: {{filePath}}',
+  status: 404,
+  code: 'file_not_found'
+});
+
+try {
+  throw new FileNotFoundError({filePath: '/some/file/path.txt'}); 
+} catch (e) {
+  console.log(e.toJSON());
+}
+```
+
+The JSON will be:
+
+```js
+{
+  "name": "FileNotFoundError",
+  "status": 404,
+  "code": "file_not_found",
+  "message": "Could not find file: /some/file/path.txt"
+  "detail": {
+    "filePath": "/some/file/path.txt"
+  }
+}
+```
+
+If you want to provide the stacktrace in the JSON, do this:
+
+```
+console.log(e.toJSON(true));
+```
+
+### Deserialize an error from JSON
+
+The simplest way to deserialize an error is:
+
+```js
+var err = errman.toError({
+  "name": "FileNotFoundError",
+  "status": 404,
+  "code": "file_not_found",
+  "message": "Could not find file: /some/file/path.txt"
+  "detail": {
+    "filePath": "/some/file/path.txt"
+  }
+});
+
+assert(err instanceof errman.FileNotFoundError); // true
+```
+
+This may be fine in some cases. However, note that in the example above, the
+stacktrace was not in the JSON, so the stack will be reported as some place in
+the errman source, where the error is created. If you want the stacktrace to be
+where you deserialize the error, then you'll need to do this:
+
+```js
+var err = new errman.Error({
+  "name": "FileNotFoundError",
+  "status": 404,
+  "code": "file_not_found",
+  "message": "Could not find file: /some/file/path.txt"
+  "detail": {
+    "filePath": "/some/file/path.txt"
+  }
+});
+
+assert(err instanceof errman.FileNotFoundError); // false
+```
+
+This leverages the default Error constructor available on all errman instances.
+However, note that the error is (of course) not of the specific type. You can
+combine these together though like this:
+
+```js
+var err = errman.toError(new errman.Error({
+  "name": "FileNotFoundError",
+  "status": 404,
+  "code": "file_not_found",
+  "message": "Could not find file: /some/file/path.txt"
+  "detail": {
+    "filePath": "/some/file/path.txt"
+  }
+}));
+
+assert(err instanceof errman.FileNotFoundError); // true
+```
+
+This creates an error with the appropriate stacktrace and then converts it into
+a specifically typed error. You can also use some method sugar:
+
+
+```js
+var err = new errman.Error({
+  "name": "FileNotFoundError",
+  "status": 404,
+  "code": "file_not_found",
+  "message": "Could not find file: /some/file/path.txt"
+  "detail": {
+    "filePath": "/some/file/path.txt"
+  }
+}).typed();
+
+assert(err instanceof errman.FileNotFoundError); // true
+```
