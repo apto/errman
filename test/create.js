@@ -2,7 +2,12 @@
 /* jshint expr: true */
 
 var expect = require('chai').expect;
-var errman = require('../');
+var errman;
+try {
+  errman = require('../');
+} catch (err) {
+  errman = require('errman');
+}
 
 describe('create', function () {
   it('should create a basic error type', function () {
